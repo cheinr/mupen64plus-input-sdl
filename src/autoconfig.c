@@ -23,6 +23,12 @@
 #include <stdlib.h>
 #include <string.h>
 
+
+#ifdef M64P_STATIC_PLUGINS
+#define M64P_PLUGIN_PROTOTYPES 1
+#define M64P_CORE_PROTOTYPES 1
+#endif
+
 #include "autoconfig.h"
 #include "m64p_config.h"
 #include "m64p_types.h"

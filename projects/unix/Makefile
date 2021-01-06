@@ -186,6 +186,7 @@ endif
 
 # set base program pointers and flags
 CC        = $(CROSS_COMPILE)gcc
+AR        = ar
 CXX       = $(CROSS_COMPILE)g++
 RM       ?= rm -f
 INSTALL  ?= install
@@ -231,7 +232,7 @@ SOURCE = \
 ifeq ($(OS),MINGW)
 SOURCE += $(SRCDIR)/osal_dynamiclib_win32.c
 else
-SOURCE += $(SRCDIR)/osal_dynamiclib_unix.c
+#SOURCE += $(SRCDIR)/osal_dynamiclib_unix.c
 endif
 
 # generate a list of object files build, make a temporary directory for them
@@ -241,6 +242,7 @@ $(shell $(MKDIR) $(OBJDIRS))
 
 # build targets
 TARGET = mupen64plus-input-sdl$(POSTFIX).$(SO_EXTENSION)
+TARGET_STATIC = mupen64plus-input-sdl$(POSTFIX).a
 
 targets:
 	@echo "Mupen64Plus-input-sdl makefile. "
@@ -268,7 +270,7 @@ targets:
 	@echo "    PLUGINDBG=1   == print extra debugging information while running"
 	@echo "    V=1           == show verbose compiler output"
 
-all: $(TARGET)
+all: $(TARGET) $(TARGET_STATIC)
 
 install: $(TARGET)
 	$(INSTALL) -d "$(DESTDIR)$(PLUGINDIR)"
@@ -295,5 +297,8 @@ $(OBJDIR)/%.o: $(SRCDIR)/%.c
 
 $(TARGET): $(OBJECTS)
 	$(LINK.o) $^ $(LOADLIBES) $(LDLIBS) -o $@
+
+$(TARGET_STATIC): $(OBJECTS)
+	$(AR) rcs $@ $^
 
 .PHONY: all clean install uninstall targets

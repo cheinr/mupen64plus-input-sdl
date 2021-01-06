@@ -28,6 +28,9 @@
 #include <string.h>
 #include <math.h>
 
+#ifdef M64P_STATIC_PLUGINS
+#define M64P_CORE_PROTOTYPES 1
+#endif
 #define M64P_PLUGIN_PROTOTYPES 1
 #include "config.h"
 #include "m64p_common.h"
@@ -57,6 +60,8 @@
 #define test_bit(bit, array)    ((array[LONG(bit)] >> OFF(bit)) & 1)
 #endif //__linux__
 
+
+#if (!M64P_STATIC_PLUGINS)
 /* definitions of pointers to Core config functions */
 ptr_ConfigOpenSection      ConfigOpenSection = NULL;
 ptr_ConfigDeleteSection    ConfigDeleteSection = NULL;
@@ -77,6 +82,8 @@ ptr_ConfigGetSharedDataFilepath ConfigGetSharedDataFilepath = NULL;
 ptr_ConfigGetUserConfigPath     ConfigGetUserConfigPath = NULL;
 ptr_ConfigGetUserDataPath       ConfigGetUserDataPath = NULL;
 ptr_ConfigGetUserCachePath      ConfigGetUserCachePath = NULL;
+
+#endif
 
 /* global data definitions */
 SController controller[4];   // 4 controllers
@@ -137,7 +144,13 @@ void DebugMessage(int level, const char *message, ...)
 static CONTROL temp_core_controlinfo[4];
 
 /* Mupen64Plus plugin functions */
-EXPORT m64p_error CALL PluginStartup(m64p_dynlib_handle CoreLibHandle, void *Context,
+EXPORT m64p_error CALL
+#if M64P_STATIC_PLUGINS // TODO
+PluginStartupInput
+#else
+PluginStartup
+#endif
+(m64p_dynlib_handle CoreLibHandle, void *Context,
                                    void (*DebugCallback)(void *, int, const char *))
 {
     ptr_CoreGetAPIVersions CoreAPIVersionFunc;
@@ -152,7 +165,13 @@ EXPORT m64p_error CALL PluginStartup(m64p_dynlib_handle CoreLibHandle, void *Con
     l_DebugCallContext = Context;
 
     /* attach and call the CoreGetAPIVersions function, check Config API version for compatibility */
+
+#if (M64P_STATIC_PLUGINS)
+    CoreAPIVersionFunc = &CoreGetAPIVersions;
+#else
     CoreAPIVersionFunc = (ptr_CoreGetAPIVersions) osal_dynlib_getproc(CoreLibHandle, "CoreGetAPIVersions");
+#endif
+    
     if (CoreAPIVersionFunc == NULL)
     {
         DebugMessage(M64MSG_ERROR, "Core emulator broken; no CoreAPIVersionFunc() function found.");
@@ -167,6 +186,9 @@ EXPORT m64p_error CALL PluginStartup(m64p_dynlib_handle CoreLibHandle, void *Con
         return M64ERR_INCOMPATIBLE;
     }
 
+
+#if (!M64P_STATIC_PLUGINS)
+    
     /* Get the core config function pointers from the library handle */
     ConfigOpenSection = (ptr_ConfigOpenSection) osal_dynlib_getproc(CoreLibHandle, "ConfigOpenSection");
     ConfigDeleteSection = (ptr_ConfigDeleteSection) osal_dynlib_getproc(CoreLibHandle, "ConfigDeleteSection");
@@ -186,6 +208,7 @@ EXPORT m64p_error CALL PluginStartup(m64p_dynlib_handle CoreLibHandle, void *Con
     ConfigGetUserConfigPath = (ptr_ConfigGetUserConfigPath) osal_dynlib_getproc(CoreLibHandle, "ConfigGetUserConfigPath");
     ConfigGetUserDataPath = (ptr_ConfigGetUserDataPath) osal_dynlib_getproc(CoreLibHandle, "ConfigGetUserDataPath");
     ConfigGetUserCachePath = (ptr_ConfigGetUserCachePath) osal_dynlib_getproc(CoreLibHandle, "ConfigGetUserCachePath");
+    
 
     if (!ConfigOpenSection || !ConfigDeleteSection || !ConfigSetParameter || !ConfigGetParameter ||
         !ConfigSetDefaultInt || !ConfigSetDefaultFloat || !ConfigSetDefaultBool || !ConfigSetDefaultString ||
@@ -195,6 +218,8 @@ EXPORT m64p_error CALL PluginStartup(m64p_dynlib_handle CoreLibHandle, void *Con
         DebugMessage(M64MSG_ERROR, "Couldn't connect to Core configuration functions");
         return M64ERR_INCOMPATIBLE;
     }
+
+#endif
 
     /* reset controllers */
     memset(controller, 0, sizeof(SController) * 4);
@@ -224,7 +249,13 @@ EXPORT m64p_error CALL PluginStartup(m64p_dynlib_handle CoreLibHandle, void *Con
     return M64ERR_SUCCESS;
 }
 
-EXPORT m64p_error CALL PluginShutdown(void)
+EXPORT m64p_error CALL
+#if M64P_STATIC_PLUGINS
+PluginShutdownInput
+#else
+PluginShutdown
+#endif
+(void)
 {
     if (!l_PluginInit)
         return M64ERR_NOT_INIT;
@@ -241,7 +272,14 @@ EXPORT m64p_error CALL PluginShutdown(void)
     return M64ERR_SUCCESS;
 }
 
-EXPORT m64p_error CALL PluginGetVersion(m64p_plugin_type *PluginType, int *PluginVersion, int *APIVersion, const char **PluginNamePtr, int *Capabilities)
+
+EXPORT m64p_error CALL
+#ifdef M64P_STATIC_PLUGINS
+PluginGetVersionInput
+#else
+PluginGetVersion
+#endif
+(m64p_plugin_type *PluginType, int *PluginVersion, int *APIVersion, const char **PluginNamePtr, int *Capabilities)
 {
     /* set version info */
     if (PluginType != NULL)
@@ -975,7 +1013,13 @@ EXPORT void CALL ReadController(int Control, unsigned char *Command)
   input:    none
   output:   none
 *******************************************************************/
-EXPORT void CALL RomClosed(void)
+EXPORT void CALL
+#if M64P_STATIC_PLUGINS
+RomClosedInput
+#else
+RomClosed
+#endif
+(void)
 {
     int i;
 
@@ -1003,7 +1047,13 @@ EXPORT void CALL RomClosed(void)
   input:    none
   output:   none
 *******************************************************************/
-EXPORT int CALL RomOpen(void)
+EXPORT int CALL
+#if M64P_STATIC_PLUGINS
+RomOpenInput
+#else
+RomOpen
+#endif
+(void)
 {
     int i;
 

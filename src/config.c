@@ -23,6 +23,9 @@
 #include <stdio.h>
 #include <string.h>
 
+#ifdef M64P_STATIC_PLUGINS
+#define M64P_CORE_PROTOTYPES 1
+#endif
 #define M64P_PLUGIN_PROTOTYPES 1
 #include "autoconfig.h"
 #include "config.h"
