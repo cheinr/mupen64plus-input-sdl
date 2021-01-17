@@ -229,10 +229,12 @@ SOURCE = \
 	$(SRCDIR)/sdl_key_converter.c \
 	$(SRCDIR)/config.c
 
-ifeq ($(OS),MINGW)
-SOURCE += $(SRCDIR)/osal_dynamiclib_win32.c
-else
-#SOURCE += $(SRCDIR)/osal_dynamiclib_unix.c
+ifneq ($(M64P_STATIC_PLUGINS), 1)
+  ifeq ($(OS),MINGW)
+    SOURCE += $(SRCDIR)/osal_dynamiclib_win32.c
+  else
+    SOURCE += $(SRCDIR)/osal_dynamiclib_unix.c
+  endif
 endif
 
 # generate a list of object files build, make a temporary directory for them
