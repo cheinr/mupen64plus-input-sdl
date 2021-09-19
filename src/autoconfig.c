@@ -35,6 +35,10 @@
 #include "osal_preproc.h"
 #include "plugin.h"
 
+#if EMSCRIPTEN
+extern findAutoInputConfigName(void* gamepadNamePtr, void* responseBufferPointer, int maxCharacters);
+#endif
+
 /* local definitions */
 #define INI_FILE_NAME "InputAutoCfg.ini"
 typedef struct {
@@ -204,7 +208,11 @@ int auto_set_defaults(int iDeviceIdx, const char *joySDLName)
 {
     FILE *pfIn;
     m64p_handle pConfig = NULL;
+#if EMSCRIPTEN
+    const char CfgFilePath[] = "/mupen64plus/data/InputAutoCfg.ini";
+#else
     const char *CfgFilePath = ConfigGetSharedDataFilepath(INI_FILE_NAME);
+#endif
     enum { E_NAME_SEARCH, E_NAME_FOUND, E_PARAM_READ } eParseState;
     char *pchIni, *pchNextLine, *pchCurLine;
     long iniLength;
@@ -221,6 +229,15 @@ int auto_set_defaults(int iDeviceIdx, const char *joySDLName)
         return 0;
     }
 
+#if EMSCRIPTEN
+
+    // Ideally we get the config from our JS functions directly,
+    // but that would require some additional parsing logic, so for now
+    // we just force the parsing logic here to use the name that gets returned.
+    char matchedConfigName[256];
+    findAutoInputConfigName(joySDLName, matchedConfigName, 256);
+#endif
+    
     /* read the input auto-config .ini file */
     pfIn = fopen(CfgFilePath, "rb");
     if (pfIn == NULL)
@@ -282,7 +299,12 @@ int auto_set_defaults(int iDeviceIdx, const char *joySDLName)
 
             /* we need to look through the device name word by word to see if it matches the joySDLName that we're looking for */ 
             pchCurLine[strlen(pchCurLine)-1] = 0;
+
+#if EMSCRIPTEN
+            joyFound = (strcmp(StripSpace(matchedConfigName), StripSpace(pchCurLine + 1)) == 0) ? 1 : 0;
+#else
             joyFound = auto_compare_name(joySDLName, StripSpace(pchCurLine + 1));
+#endif
             /* if we found the right joystick, then open up the core config section to store parameters and set the 'device' param */
             if (joyFound > joyFoundScore)
             {
