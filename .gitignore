@@ -3,3 +3,4 @@
 /projects/unix/*.a
 /build/
 *.wasm
+*.wasm.map

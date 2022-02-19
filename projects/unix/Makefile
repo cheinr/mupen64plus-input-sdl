@@ -185,9 +185,9 @@ endif
 endif
 
 # set base program pointers and flags
-CC        = $(CROSS_COMPILE)gcc
+CC        ?= $(CROSS_COMPILE)gcc
 AR        = ar
-CXX       = $(CROSS_COMPILE)g++
+CXX       ?= $(CROSS_COMPILE)g++
 RM       ?= rm -f
 INSTALL  ?= install
 MKDIR ?= mkdir -p
