@@ -36,7 +36,7 @@
 #include "plugin.h"
 
 #if EMSCRIPTEN
-extern findAutoInputConfigName(void* gamepadNamePtr, void* responseBufferPointer, int maxCharacters);
+extern int findAutoInputConfigName(void* gamepadNamePtr, void* responseBufferPointer, int maxCharacters);
 #endif
 
 /* local definitions */
